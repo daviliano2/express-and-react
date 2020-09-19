@@ -1,60 +1,108 @@
-var express = require('express');
+var express = require("express");
 var router = express.Router();
-var dbData = require('../db-data.json');
-const util = require('util')
-
+var dbData = require("../db-data.json");
+const util = require("util");
 
 function pagination(data, page = 1, limit = 20) {
-  const start = (limit * page) - limit;
+  const start = limit * page - limit;
   const end = start + (limit - 1);
-  const pageData = []
+  const pageData = [];
 
   data.forEach((data, index) => {
     if (index >= start && index <= end) {
-      pageData.push(data)
+      pageData.push(data);
     }
-  })
+  });
 
-  return pageData
+  return pageData;
 }
 
-// TODO: remove this router.param methods
-router.param('page', function (req, res, next, page) {
-  console.log('PAGE CALLED ONLY ONCE')
-  next()
-})
-router.param('date', function (req, res, next, date) {
-  console.log('date CALLED ONLY ONCE')
-  next()
-})
+function getDataByDate(dbData, selectedDate) {
+  const month = new Date(selectedDate).getMonth();
+  const year = new Date(selectedDate).getFullYear();
+
+  return dbData.filter((workout) => {
+    const workoutMonth = new Date(workout.startDate).getMonth();
+    const workoutYear = new Date(workout.startDate).getFullYear();
+
+    return workoutMonth === month && workoutYear === year;
+  });
+}
 
 /* GET workouts. */
-router.get('/:page?/:date?', function(req, res, next) {
+router.get("/", function (req, res, next) {
   // sort random data by date
-  dbData.sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate))
-  
-  let page = 1
-  if (req.params.page) {
-    page = parseInt(req.params.page)
-  }
-  console.log(req.params)
-  console.log(page)
+  dbData.sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate));
 
-  const testData = [dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1],dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1], dbData[1]]
-  const totalItems = testData.length
+  let responseData = dbData;
+  let workoutDate = null;
+  let page = 1;
+  let limit = 20;
 
-  const pageItems = pagination(testData, page);
+  const pageItems = pagination(responseData, page);
 
   const body = {
     data: {
       page,
-      totalPages: Math.ceil(testData.length / 20), // 20 is the default limit, this could be changed to be dynamic
-      category: null,
-      startDate: null,
+      totalPages: Math.ceil(responseData.length / limit),
+      categories: null,
+      startDate: workoutDate,
       items: pageItems,
-      totalItems: testData.length,
+      totalItems: responseData.length,
+    },
+  };
+
+  res.send(body);
+});
+
+router.post("/", function (req, res, next) {
+  // sort random data by date
+  dbData.sort((a, b) => Date.parse(a.startDate) - Date.parse(b.startDate));
+
+  let responseData = dbData;
+  let workoutDate = null;
+  let page = 1;
+  let limit = 20;
+
+  if (req.body) {
+    const body = req.body;
+
+    if (body.page) page = parseInt(body.page);
+
+    if (body.startDate) {
+      workoutDate = body.startDate;
+      responseData = getDataByDate(dbData, workoutDate);
+    }
+
+    if (body.categories) {
+      const checkedTrue = body.categories.find((category) => {
+        return category.checked;
+      });
+
+      if (checkedTrue) {
+        responseData = responseData.filter((workout) => {
+          const foundCategory = body.categories.find((category) => {
+            return category.name === workout.category;
+          });
+
+          return foundCategory.checked === true;
+        });
+      }
     }
   }
+
+  const pageItems = pagination(responseData, page);
+
+  const body = {
+    data: {
+      page,
+      totalPages: Math.ceil(responseData.length / limit),
+      categories: null,
+      startDate: workoutDate,
+      items: pageItems,
+      totalItems: responseData.length,
+    },
+  };
 
   res.send(body);
 });
