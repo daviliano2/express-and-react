@@ -33,6 +33,7 @@ function App() {
   const [pagination, setPagination] = useState({});
   const [categories, setCategories] = useState(initialCategoriesState);
   const [startDate, setStartDate] = useState(null);
+  const [selectedWorkout, setSelectedWorkout] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +74,7 @@ function App() {
     setStartDate(startDate);
 
     try {
-      const response = await fetchPost({ startDate });
+      const response = await fetchPost({ startDate, categories });
 
       setPagination({
         page: response.data.page,
@@ -114,6 +115,29 @@ function App() {
     });
 
     setCategories(updatedCategories);
+  };
+
+  const cleanFilters = async (event) => {
+    event.preventDefault();
+
+    try {
+      const response = await fetchPost({});
+
+      setPagination({
+        page: response.data.page,
+        totalPages: response.data.totalPages,
+        totalItems: response.data.totalItems,
+      });
+      setWorkouts(response.data.items);
+      setCategories(initialCategoriesState);
+      setStartDate(null);
+    } catch (err) {
+      console.error(`something went wrong: ${err}`);
+    }
+  };
+
+  const showDetails = (workout) => {
+    setSelectedWorkout(workout);
   };
 
   const showPagination = () => {
@@ -174,108 +198,125 @@ function App() {
         </div>
       </header>
 
-      <DatePicker
-        dateFormat="dd/MM/yyyy"
-        minDate={new Date()}
-        maxDate={addDays(new Date(), 365)}
-        selected={new Date()}
-        onChange={selectDate}
-      />
-
-      <span>Choose a category:</span>
-      <label>c1</label>
-      <input
-        name="c1"
-        type="checkbox"
-        checked={categories.c1}
-        onChange={handleCategoryChange}
-      />
-      <label>c2</label>
-      <input
-        name="c2"
-        type="checkbox"
-        checked={categories.c2}
-        onChange={handleCategoryChange}
-      />
-      <label>c3</label>
-      <input
-        name="c3"
-        type="checkbox"
-        checked={categories.c3}
-        onChange={handleCategoryChange}
-      />
-      <label>c4</label>
-      <input
-        name="c4"
-        type="checkbox"
-        checked={categories.c4}
-        onChange={handleCategoryChange}
-      />
-      <label>c5</label>
-      <input
-        name="c5"
-        type="checkbox"
-        checked={categories.c5}
-        onChange={handleCategoryChange}
-      />
-      <label>c6</label>
-      <input
-        name="c6"
-        type="checkbox"
-        checked={categories.c6}
-        onChange={handleCategoryChange}
-      />
-      <label>c7</label>
-      <input
-        name="c7"
-        type="checkbox"
-        checked={categories.c7}
-        onChange={handleCategoryChange}
-      />
-      <form onSubmit={filterByCategory}>
-        <input type="submit" value="Submit"></input>
-      </form>
-
-      <div className="content-wrapper">
-        <div className="list-wrapper">
-          <div className="header-container">
-            <div className="columns">Name</div>
-            <div className="columns">Category</div>
-          </div>
-          {workouts.map((workout, index) => (
-            <div key={`${workout.name}-${index}`} className="rows">
-              <div className="columns">{workout.name}</div>
-              <div className="columns">{workout.category}</div>
+      {selectedWorkout ? (
+        <div className="content-wrapper">
+          <div className="details-list-wrapper">
+            <div className="details-header-container">
+              <div className="columns">Name</div>
+              <div className="columns">Description</div>
+              <div className="columns">Start Date</div>
+              <div className="columns">Category</div>
             </div>
-          ))}
+            <div className="details-row">
+              <div className="columns">{selectedWorkout.name}</div>
+              <div className="columns">{selectedWorkout.description}</div>
+              <div className="columns">{selectedWorkout.startDate}</div>
+              <div className="columns">{selectedWorkout.category}</div>
+            </div>
+          </div>
+          <button
+            className="go-first-last margin-lr-5"
+            onClick={() => showDetails(null)}
+          >
+            Go back to list
+          </button>
         </div>
+      ) : (
+        <>
+          <div className="filters-wrapper">
+            <span className="categories-header">Choose a Start Date:</span>
+            <DatePicker
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              maxDate={addDays(new Date(), 365)}
+              selected={startDate || new Date()}
+              onChange={selectDate}
+            />
 
-        {pagination.totalPages > 1 ? (
-          <>
-            <div className="pagination">{showPagination()}</div>
-            <button
-              className="go-first-last margin-lr-5"
-              onClick={() => getPage(1)}
-            >
-              Go to first page
-            </button>
-            <button
-              className="go-first-last margin-lr-5"
-              onClick={() => getPage(pagination.totalPages)}
-            >
-              Go to last page
-            </button>
-            <p>
-              displaying {workouts.length} out of {pagination.totalItems}{" "}
-              workouts
-            </p>
-          </>
-        ) : (
-          <p>
-            displaying {workouts.length} out of {workouts.length} workouts
-          </p>
-        )}
-      </div>
+            <div className="categories-wrapper">
+              <span className="categories-header">Choose a category:</span>
+              {categories.map((category, index) => (
+                <span
+                  key={`wrapper-${category.name}-${index}`}
+                  className="options"
+                >
+                  <label key={`label-${category.name}-${index}`}>
+                    {category.name}
+                  </label>
+                  <input
+                    key={`${category.name}-${index}`}
+                    name={category.name}
+                    type="checkbox"
+                    checked={category.checked}
+                    onChange={handleCategoryChange}
+                  />
+                </span>
+              ))}
+              <form onSubmit={filterByCategory}>
+                <input
+                  className="apply-filters"
+                  type="submit"
+                  value="Filter by Category"
+                ></input>
+              </form>
+              <form onSubmit={cleanFilters}>
+                <input
+                  className="remove-filters"
+                  type="submit"
+                  value="Remove Filters"
+                ></input>
+              </form>
+            </div>
+          </div>
+
+          <div className="content-wrapper">
+            <div className="list-wrapper">
+              <div className="header-container">
+                <div className="columns">Name</div>
+                <div className="columns">Category</div>
+                <div className="columns">startDate</div>
+              </div>
+              {workouts.map((workout, index) => (
+                <div
+                  key={`${workout.name}-${index}`}
+                  className="rows"
+                  onClick={() => showDetails(workout)}
+                >
+                  <div className="columns">{workout.name}</div>
+                  <div className="columns">{workout.category}</div>
+                  <div className="columns">{workout.startDate}</div>
+                </div>
+              ))}
+            </div>
+
+            {pagination.totalPages > 1 ? (
+              <>
+                <div className="pagination">{showPagination()}</div>
+                <button
+                  className="go-first-last margin-lr-5"
+                  onClick={() => getPage(1)}
+                >
+                  Go to first page
+                </button>
+                <button
+                  className="go-first-last margin-lr-5"
+                  onClick={() => getPage(pagination.totalPages)}
+                >
+                  Go to last page
+                </button>
+                <p>
+                  displaying {workouts.length} out of {pagination.totalItems}{" "}
+                  workouts
+                </p>
+              </>
+            ) : (
+              <p>
+                displaying {workouts.length} out of {workouts.length} workouts
+              </p>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }

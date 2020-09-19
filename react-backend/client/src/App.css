@@ -30,6 +30,26 @@
   margin: 1.5vh 0;
 }
 
+.categories-wrapper,
+.filters-wrapper {
+  display: flex;
+}
+
+.filters-wrapper {
+  padding: 1vh;
+  color: white;
+  background-color: #ff7f66;
+}
+
+.categories-wrapper {
+  margin-left: 2vh;
+}
+
+.categories-header,
+.options {
+  margin-right: 1vh;
+}
+
 .content-wrapper {
   padding: 3vh 3vh;
 }
@@ -38,9 +58,14 @@
   min-height: 65vh;
 }
 
+.details-list-wrapper {
+  min-height: 15vh;
+}
+
 .header-container {
   display: flex;
-  width: 500px;
+  width: 750px;
+  margin-bottom: 1vh;
 }
 
 .columns {
@@ -51,8 +76,18 @@
 
 .rows {
   display: flex;
-  width: 500px;
+  width: 750px;
   padding: 0.5vh 0;
+  cursor: pointer;
+}
+
+.details-header-container {
+  display: flex;
+  margin-bottom: 1vh;
+}
+
+.details-row {
+  display: flex;
 }
 
 .App-link {
@@ -87,9 +122,31 @@
   cursor: pointer;
   border-style: none;
   background-color: #ff7f66;
+  border-radius: 5px;
   color: white;
   font-weight: bold;
   padding: 1vh;
+}
+
+.apply-filters {
+  cursor: pointer;
+  border-style: none;
+  background-color: #e7e5e6;
+  color: #656565;
+  font-weight: bold;
+  padding: 0.4vh 1vh;
+  border-radius: 5px;
+}
+
+.remove-filters {
+  cursor: pointer;
+  border-style: none;
+  background-color: #543029;
+  color: white;
+  font-weight: bold;
+  padding: 0.4vh 1vh;
+  margin-left: 5vh;
+  border-radius: 5px;
 }
 
 button:focus {

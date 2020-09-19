@@ -17,11 +17,11 @@ function pagination(data, page = 1, limit = 20) {
   return pageData;
 }
 
-function getDataByDate(dbData, selectedDate) {
+function getDataByDate(responseData, selectedDate) {
   const month = new Date(selectedDate).getMonth();
   const year = new Date(selectedDate).getFullYear();
 
-  return dbData.filter((workout) => {
+  return responseData.filter((workout) => {
     const workoutMonth = new Date(workout.startDate).getMonth();
     const workoutYear = new Date(workout.startDate).getFullYear();
 
@@ -71,7 +71,7 @@ router.post("/", function (req, res, next) {
 
     if (body.startDate) {
       workoutDate = body.startDate;
-      responseData = getDataByDate(dbData, workoutDate);
+      responseData = getDataByDate(responseData, workoutDate);
     }
 
     if (body.categories) {
